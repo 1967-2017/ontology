@@ -1,0 +1,9 @@
+name: ontology-dev
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - nodejs
+  - pip
+  - pip:
+      - -r backend/requirements.txt

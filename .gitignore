@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+
+# Virtual envs / env files
+env/
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+envs/
+*.env
+.env
+.env.local
+.env.*.local
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Logs
+logs/
+*.log
+
+# Databases / local data
+*.sqlite3
+*.db
+*.db-journal
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+Dockerfile.*
+
+# Node / frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+# local envs for frontend
+frontend/.env.local
+frontend/.env.*.local
+
+# Next / TypeScript caches
+.next/
+.nyc_output/
+
+# Misc
+*.lock
+*.log
+*.aux

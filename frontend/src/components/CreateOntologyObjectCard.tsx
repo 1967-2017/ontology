@@ -193,5 +193,40 @@ function buildInitialValues(schema: FormSchema, presetValues: Record<string, unk
     return acc;
   }, {});
 
-  return { ...initialValues, ...presetValues };
+  return { ...initialValues, ...normalizePresetValues(schema, presetValues) };
+}
+
+function normalizePresetValues(schema: FormSchema, presetValues: Record<string, unknown>) {
+  const allowedFieldNames = new Set(schema.fields.map((field) => field.name));
+  const normalized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(presetValues)) {
+    const normalizedKey = mapPresetAlias(schema.class_name, key);
+    if (allowedFieldNames.has(normalizedKey)) {
+      normalized[normalizedKey] = value;
+    }
+  }
+
+  return normalized;
+}
+
+function mapPresetAlias(className: string, key: string) {
+  if (className === "Task") {
+    if (key === "developer_id" || key === "assignee_id") {
+      return "assignee_developer_id";
+    }
+    if (key === "project" || key === "projectId") {
+      return "project_id";
+    }
+  }
+
+  if (className === "Team" && (key === "leader_id" || key === "developer_id")) {
+    return "leader_developer_id";
+  }
+
+  if (className === "Developer" && key === "teamId") {
+    return "team_id";
+  }
+
+  return key;
 }

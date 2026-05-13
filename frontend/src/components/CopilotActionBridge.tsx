@@ -1,12 +1,19 @@
 "use client";
 
-import { useCopilotAction } from "@copilotkit/react-core";
-
-import { CreateOntologyObjectCard } from "./CreateOntologyObjectCard";
-import { ObjectTableCard } from "./ObjectTableCard";
-import { ResultNoticeCard } from "./ResultNoticeCard";
+import { useCopilotAction, useCopilotAdditionalInstructions } from "@copilotkit/react-core";
+import { useActionFeed } from "./ActionFeedContext";
 
 export function CopilotActionBridge() {
+  const { pushAction } = useActionFeed();
+
+  useCopilotAdditionalInstructions(
+    {
+      instructions:
+        "你是 ontology 项目的智能助手。只处理 Project、Team、Developer、Task 四类对象。用户表达创建/新增/添加对象时，优先调用 show_create_object_form。创建任务且用户已给出开发者名或项目名时，先调用 search_objects；唯一命中后把命中的 id 放进 preset_values。Task 的项目字段名必须是 project_id，指派开发者字段名必须是 assignee_developer_id，不能写成 developer_id。Team 负责人字段名必须是 leader_developer_id。查询类问题只支持 developer_tasks、project_teams、team_members、project_tasks，查询结果必须调用 show_object_table。不要输出原始 JSON。",
+    },
+    [],
+  );
+
   useCopilotAction({
     name: "show_create_object_form",
     description: "Render a dynamic ontology object creation form.",
@@ -24,13 +31,16 @@ export function CopilotActionBridge() {
         required: false,
       },
     ],
-    handler: () => null,
-    render: ({ args }) => (
-      <CreateOntologyObjectCard
-        className={String(args.class_name)}
-        presetValues={(args.preset_values as Record<string, unknown> | undefined) ?? {}}
-      />
-    ),
+    handler: async (args) => {
+      pushAction({
+        name: "show_create_object_form",
+        payload: {
+          class_name: String(args.class_name),
+          preset_values: (args.preset_values as Record<string, unknown> | undefined) ?? {},
+        },
+      });
+      return "创建表单已渲染到主区域。";
+    },
   });
 
   useCopilotAction({
@@ -50,13 +60,16 @@ export function CopilotActionBridge() {
         required: true,
       },
     ],
-    handler: () => null,
-    render: ({ args }) => (
-      <ObjectTableCard
-        className={String(args.class_name)}
-        rows={(args.rows as Record<string, unknown>[] | undefined) ?? []}
-      />
-    ),
+    handler: async (args) => {
+      pushAction({
+        name: "show_object_table",
+        payload: {
+          class_name: String(args.class_name),
+          rows: (args.rows as Record<string, unknown>[] | undefined) ?? [],
+        },
+      });
+      return "结果表格已渲染到主区域。";
+    },
   });
 
   useCopilotAction({
@@ -82,14 +95,17 @@ export function CopilotActionBridge() {
         required: true,
       },
     ],
-    handler: () => null,
-    render: ({ args }) => (
-      <ResultNoticeCard
-        title={String(args.title)}
-        message={String(args.message)}
-        status={String(args.status) === "error" ? "error" : "success"}
-      />
-    ),
+    handler: async (args) => {
+      pushAction({
+        name: "show_result_notice",
+        payload: {
+          title: String(args.title),
+          message: String(args.message),
+          status: String(args.status) === "error" ? "error" : "success",
+        },
+      });
+      return "通知已渲染到主区域。";
+    },
   });
 
   return null;

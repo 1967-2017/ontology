@@ -60,6 +60,7 @@ npm run dev
 - 表单提交写入 MySQL
 - 写入后同步 Neo4j
 - `/objects` 管理页可脱离聊天独立验证
+- 支持通过项目脚本和 skill 将本地 MySQL 表结构、外键关系和全量数据导入 Neo4j
 
 ## 测试
 
@@ -76,6 +77,26 @@ python -m pytest backend/tests -q
 conda activate ontology-dev
 cd frontend
 npm run test
+```
+
+## MySQL 到 Neo4j 导入
+
+脚本入口：
+
+```bash
+python scripts/import_mysql_to_neo4j.py --include-table project --include-table team --rebuild
+```
+
+管理 API：
+
+```text
+POST /admin/import/mysql-to-neo4j
+```
+
+Skill：
+
+```text
+skills/mysql-to-neo4j-sync
 ```
 
 ## 已知限制

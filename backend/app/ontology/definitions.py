@@ -50,7 +50,7 @@ ONTOLOGY_CLASSES: dict[str, ClassDefinition] = {
         relations=[
             RelationDefinition(
                 name="project",
-                relation_type="BELONGS_TO",
+                relation_type="TEAM_BELONGS_TO_PROJECT",
                 source_class="Team",
                 target_class="Project",
                 direction="outgoing",
@@ -59,7 +59,7 @@ ONTOLOGY_CLASSES: dict[str, ClassDefinition] = {
             ),
             RelationDefinition(
                 name="leader",
-                relation_type="LED_BY",
+                relation_type="TEAM_LED_BY_DEVELOPER",
                 source_class="Team",
                 target_class="Developer",
                 direction="outgoing",
@@ -84,7 +84,7 @@ ONTOLOGY_CLASSES: dict[str, ClassDefinition] = {
         relations=[
             RelationDefinition(
                 name="team",
-                relation_type="MEMBER_OF",
+                relation_type="DEVELOPER_MEMBER_OF_TEAM",
                 source_class="Developer",
                 target_class="Team",
                 direction="outgoing",
@@ -129,7 +129,7 @@ ONTOLOGY_CLASSES: dict[str, ClassDefinition] = {
         relations=[
             RelationDefinition(
                 name="project",
-                relation_type="BELONGS_TO",
+                relation_type="TASK_BELONGS_TO_PROJECT",
                 source_class="Task",
                 target_class="Project",
                 direction="outgoing",
@@ -138,7 +138,7 @@ ONTOLOGY_CLASSES: dict[str, ClassDefinition] = {
             ),
             RelationDefinition(
                 name="assignee",
-                relation_type="ASSIGNED_TO",
+                relation_type="TASK_ASSIGNED_TO_DEVELOPER",
                 source_class="Task",
                 target_class="Developer",
                 direction="outgoing",

@@ -19,6 +19,9 @@ class FakeNeo4jResult:
     def __init__(self, data=None):
         self._data = data or []
 
+    def consume(self):
+        return None
+
     def __iter__(self):
         for item in self._data:
             yield type("FakeRecord", (), {"data": lambda self, payload=item: payload})()
@@ -45,11 +48,11 @@ class FakeNeo4jSession:
         if self.should_fail:
             raise RuntimeError("neo4j unavailable")
         self.queries.append((query, params))
-        if "ASSIGNED_TO" in query:
+        if "TASK_ASSIGNED_TO_DEVELOPER" in query:
             return FakeNeo4jResult([{"id": 1, "title": "task-1", "status": "todo", "priority": "high"}])
-        if "BELONGS_TO" in query and "Team" in query:
+        if "TEAM_BELONGS_TO_PROJECT" in query and "team" in query:
             return FakeNeo4jResult([{"id": 1, "name": "team", "description": None}])
-        if "MEMBER_OF" in query:
+        if "DEVELOPER_MEMBER_OF_TEAM" in query:
             return FakeNeo4jResult([{"id": 1, "name": "张三", "role": "backend"}])
         return FakeNeo4jResult()
 

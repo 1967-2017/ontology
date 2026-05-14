@@ -19,7 +19,7 @@ export function ChatWorkspace() {
         <p className="eyebrow">Action Canvas</p>
         <h2>Ontology Workspace</h2>
         <p className="sidebar-copy">左侧 CopilotSidebar 负责真实 LLM 对话，主区域只显示被触发的表单、表格和通知。</p>
-        <p className="sidebar-copy">推荐试试：创建项目、查看test项目有哪些团队、给张三创建一个任务，归属test项目。</p>
+        <p className="sidebar-copy">推荐试试：创建项目、查看test项目有哪些团队、给张三创建一个任务，归属test项目、重建图数据库。</p>
       </aside>
       <main className="main-panel">
         <div className="timeline">
@@ -31,7 +31,7 @@ export function ChatWorkspace() {
                   <h3>等待 Copilot 动作</h3>
                 </div>
               </div>
-              <p>在左侧聊天窗口输入创建或查询请求，结果会显示在这里。</p>
+              <p>在左侧聊天窗口输入创建、查询或导入请求，结果会显示在这里。</p>
             </section>
           ) : null}
           {items.map((item) => (

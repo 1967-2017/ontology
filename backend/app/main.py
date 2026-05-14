@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.agent import router as agent_router
+from app.api.admin_import import router as admin_import_router
 from app.api.health import router as health_router
 from app.api.objects import router as objects_router
 from app.api.ontology import router as ontology_router
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(admin_import_router)
 app.include_router(ontology_router)
 app.include_router(objects_router)
 app.include_router(relations_router)

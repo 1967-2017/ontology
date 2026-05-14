@@ -34,7 +34,7 @@ class QueryService:
 
     def _developer_tasks(self, driver: Driver, params: dict[str, Any]) -> dict[str, Any]:
         query = (
-            "MATCH (d:Developer {display_name: $developer_name})<-[:ASSIGNED_TO]-(t:Task) "
+            "MATCH (d:developer {display_name: $developer_name})<-[:TASK_ASSIGNED_TO_DEVELOPER]-(t:task) "
             "RETURN t.mysql_id AS id, t.title AS title, t.status AS status, t.priority AS priority "
             "ORDER BY t.mysql_id DESC"
         )
@@ -43,7 +43,7 @@ class QueryService:
 
     def _project_teams(self, driver: Driver, params: dict[str, Any]) -> dict[str, Any]:
         query = (
-            "MATCH (p:Project {display_name: $project_name})<-[:BELONGS_TO]-(t:Team) "
+            "MATCH (p:project {display_name: $project_name})<-[:TEAM_BELONGS_TO_PROJECT]-(t:team) "
             "RETURN t.mysql_id AS id, t.name AS name, t.description AS description ORDER BY t.mysql_id DESC"
         )
         rows = self._fetch_rows(driver, query, {"project_name": params["project_name"]})
@@ -51,7 +51,7 @@ class QueryService:
 
     def _team_members(self, driver: Driver, params: dict[str, Any]) -> dict[str, Any]:
         query = (
-            "MATCH (t:Team {display_name: $team_name})<-[:MEMBER_OF]-(d:Developer) "
+            "MATCH (t:team {display_name: $team_name})<-[:DEVELOPER_MEMBER_OF_TEAM]-(d:developer) "
             "RETURN d.mysql_id AS id, d.name AS name, d.role AS role ORDER BY d.mysql_id DESC"
         )
         rows = self._fetch_rows(driver, query, {"team_name": params["team_name"]})
@@ -59,7 +59,7 @@ class QueryService:
 
     def _project_tasks(self, driver: Driver, params: dict[str, Any]) -> dict[str, Any]:
         query = (
-            "MATCH (p:Project {display_name: $project_name})<-[:BELONGS_TO]-(t:Task) "
+            "MATCH (p:project {display_name: $project_name})<-[:TASK_BELONGS_TO_PROJECT]-(t:task) "
             "RETURN t.mysql_id AS id, t.title AS title, t.status AS status, t.priority AS priority "
             "ORDER BY t.mysql_id DESC"
         )

@@ -9,7 +9,7 @@ export function CopilotActionBridge() {
   useCopilotAdditionalInstructions(
     {
       instructions:
-        "你是 ontology 项目的智能助手。只处理 Project、Team、Developer、Task 四类对象。用户表达创建/新增/添加对象时，优先调用 show_create_object_form。创建任务且用户已给出开发者名或项目名时，先调用 search_objects；唯一命中后把命中的 id 放进 preset_values。Task 的项目字段名必须是 project_id，指派开发者字段名必须是 assignee_developer_id，不能写成 developer_id。Team 负责人字段名必须是 leader_developer_id。查询类问题只支持 developer_tasks、project_teams、team_members、project_tasks，查询结果必须调用 show_object_table。不要输出原始 JSON。",
+        "你是 ontology 项目的智能助手。只处理 Project、Team、Developer、Task 四类对象和 MySQL→Neo4j 图导入。用户表达创建/新增/添加对象时，优先调用 show_create_object_form。创建任务且用户已给出开发者名或项目名时，先调用 search_objects；唯一命中后把命中的 id 放进 preset_values。Task 的项目字段名必须是 project_id，指派开发者字段名必须是 assignee_developer_id，不能写成 developer_id。Team 负责人字段名必须是 leader_developer_id。查询类问题只支持 developer_tasks、project_teams、team_members、project_tasks，查询结果必须调用 show_object_table。用户表达同步图数据库、导入 MySQL 到 Neo4j、重建图数据库时，调用 import_mysql_to_neo4j；普通同步用 rebuild=false，明确说重建或清空后重导时用 rebuild=true。工具执行后调用 show_result_notice 汇总处理表数、节点数、关系数和错误数。不要输出原始 JSON。",
     },
     [],
   );

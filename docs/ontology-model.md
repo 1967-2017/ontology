@@ -14,8 +14,8 @@
 - display field: `name`
 - fields: `name`, `project_id`, `leader_developer_id`, `description`
 - relations:
-  - `BELONGS_TO -> Project`
-  - `LED_BY -> Developer`
+  - `TEAM_BELONGS_TO_PROJECT -> project`
+  - `TEAM_LED_BY_DEVELOPER -> developer`
 
 ### Developer
 
@@ -23,7 +23,7 @@
 - display field: `name`
 - fields: `name`, `email`, `role`, `team_id`, `skill_tags`
 - relations:
-  - `MEMBER_OF -> Team`
+  - `DEVELOPER_MEMBER_OF_TEAM -> team`
 
 ### Task
 
@@ -31,8 +31,8 @@
 - display field: `title`
 - fields: `title`, `description`, `project_id`, `assignee_developer_id`, `status`, `priority`, `estimated_hours`
 - relations:
-  - `BELONGS_TO -> Project`
-  - `ASSIGNED_TO -> Developer`
+  - `TASK_BELONGS_TO_PROJECT -> project`
+  - `TASK_ASSIGNED_TO_DEVELOPER -> developer`
 
 ## Query Types
 

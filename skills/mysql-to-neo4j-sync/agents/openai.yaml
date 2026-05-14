@@ -1,0 +1,4 @@
+interface:
+  display_name: "MySQL to Neo4j Sync"
+  short_description: "Import local MySQL schema and rows into Neo4j."
+  default_prompt: "Use $mysql-to-neo4j-sync to inspect a local MySQL database and import its tables, rows, and foreign-key relationships into Neo4j."

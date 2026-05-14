@@ -93,6 +93,15 @@ const defaultAgent = new BuiltInAgent({
       }),
       execute: async (args) => backendPost("/query/graph", args),
     }),
+    defineTool({
+      name: "import_mysql_to_neo4j",
+      description:
+        "Import local MySQL schema and row data into Neo4j. Use rebuild=true to clear the imported graph labels first, or rebuild=false for a sync import.",
+      parameters: z.object({
+        rebuild: z.boolean().default(false),
+      }),
+      execute: async (args) => backendPost("/admin/import/mysql-to-neo4j", args),
+    }),
   ],
 });
 

@@ -56,3 +56,20 @@ export async function sendAgentMessage(message: string): Promise<AgentResponse> 
     }),
   );
 }
+
+export async function importMysqlToNeo4j(rebuild: boolean) {
+  return unwrap<{
+    tables_processed: number;
+    nodes_created_or_updated: number;
+    relationships_created: number;
+    skipped_tables: string[];
+    errors: string[];
+    table_summaries: Record<string, Record<string, unknown>>;
+  }>(
+    fetch(`${API_BASE_URL}/admin/import/mysql-to-neo4j`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rebuild }),
+    }),
+  );
+}

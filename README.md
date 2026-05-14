@@ -61,6 +61,23 @@ npm run dev
 - 写入后同步 Neo4j
 - `/objects` 管理页可脱离聊天独立验证
 
+## 测试
+
+后端测试：
+
+```bash
+conda activate ontology-dev
+python -m pytest backend/tests -q
+```
+
+前端测试：
+
+```bash
+conda activate ontology-dev
+cd frontend
+npm run test
+```
+
 ## 已知限制
 
 - 当前 agent 为规则编排版，动作协议已对齐设计稿，等你确认具体 AG-UI 仓库后可替换为真实 SDK 接入。

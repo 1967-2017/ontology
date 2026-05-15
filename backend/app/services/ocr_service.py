@@ -14,10 +14,7 @@ class OCRService:
     def __init__(self) -> None:
         settings = get_settings()
         self.paddle_root = settings.paddleocr_root
-        if self.paddle_root and self.paddle_root.exists():
-            paddle_root_str = str(self.paddle_root)
-            if paddle_root_str not in sys.path:
-                sys.path.insert(0, paddle_root_str)
+        self._extend_import_paths(self.paddle_root)
 
     def extract(self, file_path: str, file_type: str) -> dict[str, Any]:
         path = Path(file_path)
@@ -54,7 +51,10 @@ class OCRService:
         try:
             import fitz  # type: ignore
         except ModuleNotFoundError as exc:
-            raise HTTPException(status_code=500, detail="PDF 无可提取文本，且缺少 PyMuPDF 以执行 OCR 回退") from exc
+            raise HTTPException(
+                status_code=500,
+                detail="PDF 无可提取文本，且当前后端环境缺少 PyMuPDF，无法执行扫描版 PDF 的 OCR 回退。",
+            ) from exc
 
         pdf = fitz.open(path)
         rendered_pages: list[dict[str, Any]] = []
@@ -85,7 +85,10 @@ class OCRService:
     def _build_provider(self):
         rapidocr_module = self._safe_import("rapidocr_onnxruntime")
         if rapidocr_module is not None:
-            engine = rapidocr_module.RapidOCR()
+            try:
+                engine = rapidocr_module.RapidOCR()
+            except Exception as exc:
+                raise HTTPException(status_code=500, detail=f"RapidOCR 初始化失败：{exc}") from exc
 
             def run_rapidocr(image: Any) -> list[dict[str, Any]]:
                 result, _ = engine(image)
@@ -95,17 +98,26 @@ class OCRService:
 
         paddleocr_module = self._safe_import("paddleocr")
         if paddleocr_module is not None:
-            engine = paddleocr_module.PaddleOCR(use_angle_cls=True, lang="ch")
+            try:
+                engine = paddleocr_module.PaddleOCR(use_angle_cls=True, lang="ch")
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"PaddleOCR 初始化失败：{exc}",
+                ) from exc
 
             def run_paddleocr(image: Any) -> list[dict[str, Any]]:
-                result = engine.ocr(image, cls=True)
+                result = engine.ocr(self._to_paddleocr_input(image), cls=True)
                 return self._normalize_paddleocr_result(result)
 
             return run_paddleocr
 
         raise HTTPException(
             status_code=500,
-            detail="未找到 RapidOCR 或 PaddleOCR。请先安装 OCR 依赖，或确认 E:\\paddleOCR 可用。",
+            detail=(
+                "当前后端环境未安装可用的 OCR 依赖。"
+                "请在 ontology-dev 环境中安装 paddleocr；若需要扫描版 PDF OCR，还需安装 PyMuPDF。"
+            ),
         )
 
     def _safe_import(self, module_name: str):
@@ -113,6 +125,29 @@ class OCRService:
             return importlib.import_module(module_name)
         except ModuleNotFoundError:
             return None
+
+    def _extend_import_paths(self, paddle_root: Path | None) -> None:
+        if paddle_root is None or not paddle_root.exists():
+            return
+        candidate_paths = [paddle_root, paddle_root / "Lib" / "site-packages"]
+        for candidate in candidate_paths:
+            if candidate.exists():
+                candidate_str = str(candidate)
+                if candidate_str not in sys.path:
+                    sys.path.insert(0, candidate_str)
+
+    def _to_paddleocr_input(self, image: Any) -> Any:
+        if isinstance(image, (str, bytes, list)):
+            return image
+        if hasattr(image, "mode") and hasattr(image, "size"):
+            try:
+                import numpy as np
+            except ModuleNotFoundError as exc:
+                raise HTTPException(status_code=500, detail="缺少 numpy，无法将图片送入 PaddleOCR") from exc
+            if getattr(image, "mode", None) != "RGB":
+                image = image.convert("RGB")
+            return np.array(image)
+        return image
 
     def _normalize_rapidocr_result(self, result: Any) -> list[dict[str, Any]]:
         blocks: list[dict[str, Any]] = []

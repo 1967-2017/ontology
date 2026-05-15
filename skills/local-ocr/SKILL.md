@@ -28,4 +28,6 @@ Use the project's local document pipeline rather than inventing a new OCR path.
 
 - The OCR API is stateful. `POST /documents/{document_id}/ocr` returns a structured state payload even when the document is already `processing`, `failed`, or `completed`.
 - OCR text is sanitized before persistence, so invalid surrogate Unicode characters should not be reintroduced downstream.
+- The recommended runtime is the main `ontology-dev` backend environment with `paddleocr + PyMuPDF` installed directly.
+- `PADDLEOCR_ROOT` is only a compatibility fallback for an external Python environment; do not rely on it by default.
 - Prefer the project MCP tool names that mirror these endpoints when the local MCP server is available.

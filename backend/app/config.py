@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     upload_dir_name: str = "documents"
     export_dir_name: str = "exports"
     knowledge_dir_name: str = "knowledge"
-    paddleocr_root: Path | None = Path(r"E:\paddleOCR")
+    paddleocr_root: Path | None = None
     deepseek_api_key: str | None = None
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-v4-flash"

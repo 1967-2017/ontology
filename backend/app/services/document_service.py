@@ -79,7 +79,7 @@ class DocumentService:
         message = {
             "pending": "文档尚未开始 OCR 处理。",
             "processing": "OCR 正在处理中，请稍后再试。",
-            "failed": "OCR 处理失败，请检查文件内容或 OCR 依赖后重试。",
+            "failed": "OCR 处理失败。请确认 ontology-dev 已安装 PaddleOCR；扫描版 PDF 还需要 PyMuPDF。",
         }.get(status, "OCR 状态未知。")
 
         return {

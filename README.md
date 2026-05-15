@@ -43,6 +43,23 @@ copy .env.example .env
 uvicorn app.main:app --reload
 ```
 
+OCR 默认依赖 `ontology-dev` 环境本身，至少需要：
+
+```text
+paddleocr
+PyMuPDF
+Pillow
+pypdf
+```
+
+如果你确实要复用外部 Python 环境中的 PaddleOCR，可选配置：
+
+```text
+PADDLEOCR_ROOT=E:\paddleOCR
+```
+
+但默认推荐直接把 OCR 依赖安装在 `ontology-dev` 中，不要依赖外部 venv 路径注入。
+
 PPTX 生成依赖这些后端 `.env` 配置：
 
 ```text
@@ -83,6 +100,7 @@ DEEPSEEK_MODEL=deepseek-v4-flash
 - `/objects` 管理页可脱离聊天独立验证
 - 支持通过项目脚本和 skill 将本地 MySQL 表结构、外键关系和全量数据导入 Neo4j
 - 支持通过本地 skill + MCP 工具执行 OCR、Chroma 持久知识库检索和 PPTX 生成
+- OCR 的推荐运行方式是：在 `ontology-dev` 里直接安装 `paddleocr + PyMuPDF`，图片和扫描版 PDF 都走同一后端环境
 
 ## 测试
 

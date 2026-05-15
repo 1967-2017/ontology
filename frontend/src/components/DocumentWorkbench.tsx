@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 
 import {
   deleteProjectDocument,
@@ -9,71 +9,33 @@ import {
   runDocumentOcr,
   uploadProjectDocument,
 } from "@/lib/api";
-import { ProjectDocument } from "@/types/ontology";
 import { useActionFeed } from "./ActionFeedContext";
 
 type Notice = { title: string; message: string; status: "success" | "error" };
 
 export function DocumentWorkbench() {
-  const { items, pushAction } = useActionFeed();
-  const [pendingDocuments, setPendingDocuments] = useState<ProjectDocument[]>([]);
+  const {
+    pushAction,
+    sessionDocuments,
+    upsertSessionDocument,
+    patchSessionDocument,
+    removeSessionDocuments,
+  } = useActionFeed();
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const raw = window.localStorage.getItem("pending-upload-documents");
-    if (!raw) {
-      return;
-    }
-    try {
-      const parsed = JSON.parse(raw) as ProjectDocument[];
-      setPendingDocuments(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      window.localStorage.removeItem("pending-upload-documents");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    window.localStorage.setItem("pending-upload-documents", JSON.stringify(pendingDocuments));
-  }, [pendingDocuments]);
-
-  useEffect(() => {
-    for (const item of items) {
-      if (item.action.name === "show_ocr_result") {
-        removePendingDocuments([item.action.payload.document_id]);
-      }
-      if (item.action.name === "show_ppt_result") {
-        removePendingDocuments(item.action.payload.source_document_ids ?? []);
-      }
-    }
-  }, [items]);
 
   function pushNotice(notice: Notice) {
     pushAction({ name: "show_result_notice", payload: notice });
   }
-
-  function removePendingDocuments(documentIds: number[]) {
-    if (documentIds.length === 0) {
-      return;
-    }
-    setPendingDocuments((current) => current.filter((document) => !documentIds.includes(document.document_id)));
-  }
-
   async function handleUpload(file: File | null) {
     if (!file) {
       return;
     }
     try {
       const uploaded = await uploadProjectDocument(file);
-      setPendingDocuments((current) => [uploaded, ...current.filter((item) => item.document_id !== uploaded.document_id)]);
+      upsertSessionDocument(uploaded);
       pushNotice({
         title: "上传完成",
-        message: `已加入当前会话附件：${uploaded.filename}。发送去处理后，它会自动从工作区移出。`,
+        message: `已加入当前会话附件：${uploaded.filename}。该附件执行一次功能后会自动移出列表。`,
         status: "success",
       });
     } catch (error) {
@@ -86,13 +48,13 @@ export function DocumentWorkbench() {
   }
 
   async function handleOcr(document: ProjectDocument) {
-    removePendingDocuments([document.document_id]);
     try {
       const result =
         document.ocr_status === "completed"
           ? await getDocumentOcrResult(document.document_id)
           : await runDocumentOcr(document.document_id);
       if (result.status === "completed") {
+        removeSessionDocuments([document.document_id]);
         pushAction({
           name: "show_ocr_result",
           payload: {
@@ -103,6 +65,7 @@ export function DocumentWorkbench() {
           },
         });
       } else {
+        patchSessionDocument(document.document_id, { ocr_status: result.status ?? document.ocr_status });
         pushNotice({
           title: result.status === "failed" ? "OCR 失败" : "OCR 处理中",
           message: result.message ?? "OCR 当前没有可展示的结果。",
@@ -110,6 +73,7 @@ export function DocumentWorkbench() {
         });
       }
     } catch (error) {
+      patchSessionDocument(document.document_id, { ocr_status: "failed" });
       pushNotice({
         title: "OCR 失败",
         message: error instanceof Error ? error.message : "文档识别失败",
@@ -119,9 +83,22 @@ export function DocumentWorkbench() {
   }
 
   async function handleIndex(document: ProjectDocument) {
-    removePendingDocuments([document.document_id]);
     try {
+      if (document.ocr_status !== "completed") {
+        const ocrResult = await runDocumentOcr(document.document_id);
+        if (ocrResult.status !== "completed") {
+          patchSessionDocument(document.document_id, { ocr_status: ocrResult.status ?? document.ocr_status });
+          pushNotice({
+            title: ocrResult.status === "failed" ? "OCR 失败" : "OCR 处理中",
+            message: ocrResult.message ?? "OCR 当前没有可展示的结果。",
+            status: ocrResult.status === "failed" ? "error" : "success",
+          });
+          return;
+        }
+        patchSessionDocument(document.document_id, { ocr_status: "completed" });
+      }
       await indexDocumentToKnowledgeBase(document.document_id);
+      removeSessionDocuments([document.document_id]);
       pushNotice({
         title: "已入库",
         message: `${document.filename} 已写入本地知识库。`,
@@ -139,7 +116,7 @@ export function DocumentWorkbench() {
   async function handleDelete(document: ProjectDocument) {
     try {
       await deleteProjectDocument(document.document_id);
-      removePendingDocuments([document.document_id]);
+      removeSessionDocuments([document.document_id]);
       pushNotice({
         title: "已删除",
         message: `${document.filename} 已从本地存储和知识库移除。`,
@@ -161,7 +138,7 @@ export function DocumentWorkbench() {
           <p className="eyebrow">Attachment Tray</p>
           <h3>当前会话附件</h3>
         </div>
-        <span className="chip">{pendingDocuments.length} 份待发送附件</span>
+        <span className="chip">{sessionDocuments.length} 份待处理附件</span>
       </div>
       <label className="upload-dropzone">
         <input
@@ -177,11 +154,11 @@ export function DocumentWorkbench() {
           }}
         />
         <strong>上传图片或 PDF</strong>
-        <p>这里仅显示当前待处理附件。附件一旦被送去 OCR、入库或生成 PDF，就会自动从工作区移出。</p>
+        <p>这里显示当前待处理附件。每次上传的附件只能执行一次功能，完成 OCR、入库或生成 PPT 后会自动移出。</p>
       </label>
       <div className="doc-list">
-        {pendingDocuments.length === 0 ? <p>当前没有待发送附件。</p> : null}
-        {pendingDocuments.map((document) => (
+        {sessionDocuments.length === 0 ? <p>当前没有待处理附件。</p> : null}
+        {sessionDocuments.map((document) => (
           <article key={document.document_id} className="doc-row">
             <div>
               <strong>{document.filename}</strong>

@@ -40,6 +40,7 @@ class KnowledgeService:
                 embeddings=[self._embed_text(chunk["text"]) for chunk in chunks],
             )
         self.document_service.mark_document_indexed(db, document)
+        self.document_service.mark_document_consumed(db, document)
         return {
             "document_id": document_id,
             "indexed_chunks": len(chunks),

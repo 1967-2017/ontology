@@ -39,6 +39,7 @@ def run_document_ocr(document_id: int, db: Session = Depends(get_db)) -> ApiResp
     try:
         result = ocr_service.extract(document.storage_path, document.file_type)
         document_service.save_ocr_result(db, document, result["full_text"], result["pages"], result["blocks"])
+        document_service.mark_document_consumed(db, document)
         payload = document_service.get_ocr_state(db, document_id)
     except Exception:
         db.rollback()

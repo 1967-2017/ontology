@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import JSON, Date, DateTime, Enum as SqlEnum, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import JSON, Boolean, Date, DateTime, Enum as SqlEnum, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.mysql import Base
@@ -137,6 +137,7 @@ class DocumentModel(Base):
         nullable=False,
         default=DocumentKnowledgeStatus.pending,
     )
+    workspace_active: Mapped[bool] = mapped_column(Boolean(), nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), nullable=False, server_default=func.now(), onupdate=func.now()

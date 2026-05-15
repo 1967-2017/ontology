@@ -62,12 +62,12 @@ const defaultAgent = new BuiltInAgent({
     "创建任务且用户已给出开发者名或项目名时，先调用 search_objects；唯一命中后把命中的 id 填进 preset_values。",
     "查询类问题只支持 developer_tasks、project_teams、team_members、project_tasks。",
     "查询结果必须调用前端动作 show_object_table。",
-    "涉及 OCR、知识库和 PPT 前，先调用 list_project_documents 理解当前可用文档。",
-    "用户要求识别文件时，只有文档状态是 pending 才调用 run_document_ocr；如果是 processing 或 failed，只调用 get_document_ocr_result 读取状态，不要手动重新触发 OCR。",
-    "OCR 工具返回 status=completed 时才调用 show_ocr_result；返回 status=processing 或 failed 时调用 show_result_notice。",
+    "涉及 OCR、知识库和 PPT 前，先调用 list_project_documents 理解当前会话可用文档。",
+    "list_project_documents 只返回当前会话仍可处理的附件，不包含已处理附件。",
+    "OCR、入库和 PPT 工具本身会同步附件状态；OCR 完成时会直接渲染 OCR 结果，入库成功时会直接渲染结果通知，PPT 工具会直接渲染结果卡片。",
+    "只有用户明确要求识别/OCR 时才允许调用 run_document_ocr 或 get_document_ocr_result。",
     "用户要求基于知识库回答时，调用 answer_with_project_knowledge_base，然后调用 show_rag_answer。",
-    "用户要求把资料加入知识库时，调用 index_document_to_kb，并用 show_result_notice 汇总结果。",
-    "用户要求根据上传文件、这份文件、当前资料生成 PPTX 汇报时，禁止只传 topic。必须先调用 list_project_documents 选择文档，再调用 generate_ppt_from_uploaded_documents 或 generate_editable_pptx，并传入 document_ids 和 slide_count；这条路径不要求先 OCR，也不要求先加入知识库。",
+    "用户要求根据上传文件、这份文件、当前资料生成 PPTX 汇报时，禁止只传 topic。必须先调用 list_project_documents 选择文档，再直接调用 generate_ppt_from_uploaded_documents 或 generate_editable_pptx，并传入 document_ids 和 slide_count；这条路径绝对禁止先调用 run_document_ocr 或 get_document_ocr_result，因为 PPT 工具会自己完成所需文本提取。",
     "PPT 生成工具本身会渲染结果卡片，不需要额外调用 show_ppt_result。",
     "需要说明结果时，用中文简洁说明，不输出原始 JSON。",
   ].join("\n"),
@@ -110,36 +110,6 @@ const defaultAgent = new BuiltInAgent({
       execute: async (args) => backendPost("/admin/import/mysql-to-neo4j", args),
     }),
     defineTool({
-      name: "list_project_documents",
-      description: "List uploaded project documents with OCR and knowledge-base status.",
-      parameters: z.object({}),
-      execute: async () => backendGet("/documents"),
-    }),
-    defineTool({
-      name: "run_document_ocr",
-      description: "Run OCR for an uploaded document only when it is pending; otherwise return its current OCR state.",
-      parameters: z.object({
-        document_id: z.number(),
-      }),
-      execute: async (args) => backendPost(`/documents/${args.document_id}/ocr`, {}),
-    }),
-    defineTool({
-      name: "get_document_ocr_result",
-      description: "Get the current OCR state or OCR result for an uploaded document.",
-      parameters: z.object({
-        document_id: z.number(),
-      }),
-      execute: async (args) => backendGet(`/documents/${args.document_id}/ocr`),
-    }),
-    defineTool({
-      name: "index_document_to_kb",
-      description: "Index an OCR-completed document into the local persistent Chroma knowledge base.",
-      parameters: z.object({
-        document_id: z.number(),
-      }),
-      execute: async (args) => backendPost(`/documents/${args.document_id}/index`, {}),
-    }),
-    defineTool({
       name: "search_project_knowledge_base",
       description: "Search the project knowledge base and return cited snippets.",
       parameters: z.object({
@@ -156,29 +126,6 @@ const defaultAgent = new BuiltInAgent({
         limit: z.number().optional(),
       }),
       execute: async (args) => backendPost("/knowledge/answer", args),
-    }),
-    defineTool({
-      name: "delete_project_document",
-      description: "Delete an uploaded document and purge its local knowledge-base entries.",
-      parameters: z.object({
-        document_id: z.number(),
-      }),
-      execute: async (args) => {
-        const response = await fetch(`${backendBaseUrl}/documents/${args.document_id}`, {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          cache: "no-store",
-        });
-        const json = (await response.json()) as {
-          success: boolean;
-          data: { deleted: boolean; document_id: number };
-          error?: { message?: string } | null;
-        };
-        if (!response.ok || !json.success) {
-          throw new Error(json.error?.message ?? "Backend request failed");
-        }
-        return json.data;
-      },
     }),
     defineTool({
       name: "get_ppt_generation_status",

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import inspect, text
 
 from app.api.agent import router as agent_router
 from app.api.admin_import import router as admin_import_router
@@ -21,9 +22,26 @@ from app.schemas.common import ApiError, ApiResponse
 settings = get_settings()
 
 
+def ensure_document_workspace_active_column() -> None:
+    inspector = inspect(engine)
+    if "document" not in inspector.get_table_names():
+        return
+    columns = {column["name"] for column in inspector.get_columns("document")}
+    if "workspace_active" in columns:
+        return
+    ddl = (
+        "ALTER TABLE document ADD COLUMN workspace_active BOOLEAN NOT NULL DEFAULT 1"
+        if engine.dialect.name == "sqlite"
+        else "ALTER TABLE document ADD COLUMN workspace_active BOOLEAN NOT NULL DEFAULT TRUE"
+    )
+    with engine.begin() as connection:
+        connection.execute(text(ddl))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    ensure_document_workspace_active_column()
     yield
 
 

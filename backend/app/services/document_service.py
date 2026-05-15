@@ -38,6 +38,7 @@ class DocumentService:
             mime_type=file.content_type or "application/octet-stream",
             file_type=file_type,
             storage_path=str(target_path),
+            workspace_active=True,
         )
         db.add(document)
         db.commit()
@@ -45,7 +46,13 @@ class DocumentService:
         return self.serialize_document(document)
 
     def list_documents(self, db: Session) -> dict:
-        items = [self.serialize_document(item) for item in db.query(DocumentModel).order_by(DocumentModel.id.desc()).all()]
+        items = [
+            self.serialize_document(item)
+            for item in db.query(DocumentModel)
+            .filter(DocumentModel.workspace_active.is_(True))
+            .order_by(DocumentModel.id.desc())
+            .all()
+        ]
         return {"items": items}
 
     def get_document_model(self, db: Session, document_id: int) -> DocumentModel:
@@ -139,6 +146,10 @@ class DocumentService:
         document.knowledge_status = DocumentKnowledgeStatus.pending
         db.commit()
 
+    def mark_document_consumed(self, db: Session, document: DocumentModel) -> None:
+        document.workspace_active = False
+        db.commit()
+
     def delete_document(self, db: Session, document_id: int) -> dict:
         document = self.get_document_model(db, document_id)
         db.execute(delete(DocumentOCRResultModel).where(DocumentOCRResultModel.document_id == document_id))
@@ -158,6 +169,7 @@ class DocumentService:
             "file_type": document.file_type,
             "ocr_status": document.ocr_status.value,
             "knowledge_status": document.knowledge_status.value,
+            "workspace_active": document.workspace_active,
             "created_at": document.created_at,
         }
 

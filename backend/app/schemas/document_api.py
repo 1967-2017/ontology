@@ -11,6 +11,7 @@ class DocumentResponse(BaseModel):
     file_type: str
     ocr_status: str
     knowledge_status: str
+    workspace_active: bool
     created_at: datetime
 
 

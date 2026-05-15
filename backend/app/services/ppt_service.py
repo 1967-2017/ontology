@@ -85,6 +85,8 @@ class PPTService:
         presentation.file_path = str(output_path)
         presentation.status = PresentationStatus.completed
         db.commit()
+        if document_ids:
+            self._consume_source_documents(db, document_ids)
         db.refresh(presentation)
         return self.serialize_presentation(presentation)
 
@@ -181,6 +183,12 @@ class PPTService:
             document = self.document_service.get_document_model(db, document_id)
             labels.append(document.filename)
         return labels
+
+    def _consume_source_documents(self, db: Session, document_ids: list[int]) -> None:
+        for document_id in document_ids:
+            document = self.document_service.get_document_model(db, document_id)
+            if document.workspace_active:
+                self.document_service.mark_document_consumed(db, document)
 
     def _collect_uploaded_document_material(self, db: Session, document_ids: list[int], limit: int) -> list[str]:
         snippets: list[str] = []

@@ -55,6 +55,9 @@ def test_document_ocr_rag_and_ppt_flow(client, tmp_path, monkeypatch):
     ocr_response = client.post(f"/documents/{document_id}/ocr")
     assert ocr_response.status_code == 200
     assert "AI Agent" in ocr_response.json()["data"]["full_text"]
+    remaining_after_ocr = client.get("/documents")
+    assert remaining_after_ocr.status_code == 200
+    assert remaining_after_ocr.json()["data"]["items"] == []
 
     index_response = client.post(f"/documents/{document_id}/index")
     assert index_response.status_code == 200
@@ -301,6 +304,9 @@ def test_generate_ppt_from_uploaded_document_without_prior_ocr_or_kb(client, tmp
     assert outline[1]["title"] == "背景与问题"
     assert outline[-1]["title"] == "结论与行动建议"
     assert outline[2]["content_summary"] == "说明实施路径与方法"
+    remaining_after_ppt = client.get("/documents")
+    assert remaining_after_ppt.status_code == 200
+    assert remaining_after_ppt.json()["data"]["items"] == []
 
 
 def test_generate_ppt_from_uploaded_document_fails_when_no_text_can_be_extracted(client, tmp_path, monkeypatch):
@@ -324,6 +330,35 @@ def test_generate_ppt_from_uploaded_document_fails_when_no_text_can_be_extracted
     )
     assert response.status_code == 400
     assert "未能提取到可用于生成 PPTX 汇报的文本内容" in response.json()["error"]["message"]
+
+
+def test_consumed_document_is_removed_from_available_document_list(client, tmp_path, monkeypatch):
+    configure_document_environment(tmp_path)
+
+    upload_a = client.post("/documents/upload", files={"file": ("a.png", b"fake-image-a", "image/png")})
+    upload_b = client.post("/documents/upload", files={"file": ("b.png", b"fake-image-b", "image/png")})
+    assert upload_a.status_code == 200
+    assert upload_b.status_code == 200
+    document_a = upload_a.json()["data"]["document_id"]
+    document_b = upload_b.json()["data"]["document_id"]
+
+    monkeypatch.setattr(
+        documents_api.ocr_service,
+        "extract",
+        lambda file_path, file_type: {
+            "full_text": "文档 A OCR",
+            "pages": [{"page_number": 1, "text": "文档 A OCR", "blocks": [{"text": "文档 A OCR"}], "source": "ocr"}],
+            "blocks": [{"text": "文档 A OCR"}],
+        },
+    )
+
+    ocr_response = client.post(f"/documents/{document_a}/ocr")
+    assert ocr_response.status_code == 200
+
+    list_response = client.get("/documents")
+    assert list_response.status_code == 200
+    items = list_response.json()["data"]["items"]
+    assert [item["document_id"] for item in items] == [document_b]
 
 
 def test_ppt_outline_changes_with_slide_count_and_document_structure(client, tmp_path, monkeypatch):

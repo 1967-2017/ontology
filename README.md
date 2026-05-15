@@ -43,6 +43,18 @@ copy .env.example .env
 uvicorn app.main:app --reload
 ```
 
+PPTX 生成依赖这些后端 `.env` 配置：
+
+```text
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+GPT_IMAGE_API_KEY=
+GPT_IMAGE_BASE_URL=https://api.openai.com/v1
+GPT_IMAGE_MODEL=gpt-image-2
+GPT_IMAGE_SIZE=16:9
+```
+
 3. 配置前端：
 
 ```bash
@@ -50,6 +62,15 @@ conda activate ontology-dev
 cd frontend
 copy .env.local.example .env.local
 npm run dev
+```
+
+前端聊天运行时使用这些 `frontend/.env.local` 配置：
+
+```text
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+DEEPSEEK_API_KEY=
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
 ## 当前实现范围
@@ -61,6 +82,7 @@ npm run dev
 - 写入后同步 Neo4j
 - `/objects` 管理页可脱离聊天独立验证
 - 支持通过项目脚本和 skill 将本地 MySQL 表结构、外键关系和全量数据导入 Neo4j
+- 支持通过本地 skill + MCP 工具执行 OCR、Chroma 持久知识库检索和 PPTX 生成
 
 ## 测试
 
@@ -97,6 +119,34 @@ Skill：
 
 ```text
 skills/mysql-to-neo4j-sync
+```
+
+## 文档技能与 MCP
+
+Skill：
+
+```text
+skills/local-ocr
+skills/local-rag
+skills/pptx-generator
+```
+
+项目内 MCP：
+
+```text
+frontend/src/app/api/mcp/local/route.ts
+```
+
+默认通过 Next.js 本地地址暴露：
+
+```text
+http://127.0.0.1:3000/api/mcp/local
+```
+
+如需覆盖地址，可设置：
+
+```text
+LOCAL_MCP_SERVER_URL
 ```
 
 ## 已知限制

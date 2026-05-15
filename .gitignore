@@ -75,3 +75,6 @@ frontend/.env.*.local
 *.lock
 *.log
 *.aux
+
+# Chroma 持久化目录
+backend/data/

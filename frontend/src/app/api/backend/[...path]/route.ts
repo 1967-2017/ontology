@@ -8,26 +8,33 @@ async function forward(request: NextRequest, path: string[]) {
     url.searchParams.set(key, value);
   });
 
-  const init: RequestInit = {
-    method: request.method,
-    headers: {
-      "Content-Type": request.headers.get("content-type") ?? "application/json",
-    },
-    cache: "no-store",
-  };
+  const headers = new Headers();
+  const contentType = request.headers.get("content-type");
+  if (contentType) {
+    headers.set("Content-Type", contentType);
+  }
+
+  const init: RequestInit = { method: request.method, headers, cache: "no-store" };
 
   if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = await request.text();
+    init.body = await request.arrayBuffer();
   }
 
   const response = await fetch(url.toString(), init);
-  const text = await response.text();
+  const body = await response.arrayBuffer();
+  const responseHeaders = new Headers();
+  const responseContentType = response.headers.get("content-type");
+  if (responseContentType) {
+    responseHeaders.set("Content-Type", responseContentType);
+  }
+  const contentDisposition = response.headers.get("content-disposition");
+  if (contentDisposition) {
+    responseHeaders.set("Content-Disposition", contentDisposition);
+  }
 
-  return new NextResponse(text, {
+  return new NextResponse(body, {
     status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("content-type") ?? "application/json",
-    },
+    headers: responseHeaders,
   });
 }
 

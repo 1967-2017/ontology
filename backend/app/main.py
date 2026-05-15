@@ -6,9 +6,12 @@ from fastapi.responses import JSONResponse
 
 from app.api.agent import router as agent_router
 from app.api.admin_import import router as admin_import_router
+from app.api.documents import router as documents_router
 from app.api.health import router as health_router
+from app.api.knowledge import router as knowledge_router
 from app.api.objects import router as objects_router
 from app.api.ontology import router as ontology_router
+from app.api.ppt import router as ppt_router
 from app.api.query import router as query_router
 from app.api.relations import router as relations_router
 from app.config import get_settings
@@ -36,8 +39,11 @@ app.add_middleware(
 
 app.include_router(health_router)
 app.include_router(admin_import_router)
+app.include_router(documents_router)
+app.include_router(knowledge_router)
 app.include_router(ontology_router)
 app.include_router(objects_router)
+app.include_router(ppt_router)
 app.include_router(relations_router)
 app.include_router(query_router)
 app.include_router(agent_router)

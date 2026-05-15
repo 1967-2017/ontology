@@ -1,4 +1,4 @@
-import { AgentResponse, FormSchema } from "@/types/ontology";
+import { AgentResponse, FormSchema, OCRResult, PptResult, ProjectDocument, RagAnswer } from "@/types/ontology";
 
 const API_BASE_URL = "/api/backend";
 
@@ -70,6 +70,74 @@ export async function importMysqlToNeo4j(rebuild: boolean) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rebuild }),
+    }),
+  );
+}
+
+export async function listProjectDocuments(): Promise<{ items: ProjectDocument[] }> {
+  return unwrap(fetch(`${API_BASE_URL}/documents`, { cache: "no-store" }));
+}
+
+export async function uploadProjectDocument(file: File): Promise<ProjectDocument> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return unwrap(
+    fetch(`${API_BASE_URL}/documents/upload`, {
+      method: "POST",
+      body: formData,
+    }),
+  );
+}
+
+export async function runDocumentOcr(documentId: number): Promise<OCRResult> {
+  return unwrap(
+    fetch(`${API_BASE_URL}/documents/${documentId}/ocr`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function getDocumentOcrResult(documentId: number): Promise<OCRResult> {
+  return unwrap(fetch(`${API_BASE_URL}/documents/${documentId}/ocr`, { cache: "no-store" }));
+}
+
+export async function indexDocumentToKnowledgeBase(documentId: number) {
+  return unwrap(
+    fetch(`${API_BASE_URL}/documents/${documentId}/index`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function deleteProjectDocument(documentId: number) {
+  return unwrap(
+    fetch(`${API_BASE_URL}/documents/${documentId}`, {
+      method: "DELETE",
+    }),
+  );
+}
+
+export async function answerWithKnowledgeBase(question: string): Promise<RagAnswer> {
+  return unwrap(
+    fetch(`${API_BASE_URL}/knowledge/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    }),
+  );
+}
+
+export async function generateEditablePptx(payload: {
+  topic?: string;
+  slide_count?: number;
+  document_ids?: number[];
+  use_knowledge_base?: boolean;
+}): Promise<PptResult> {
+  return unwrap(
+    fetch(`${API_BASE_URL}/ppt/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     }),
   );
 }

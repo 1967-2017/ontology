@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPTX Generator"
+  short_description: "Generate PPTX decks from topics or uploaded project materials."
+  default_prompt: "Use $pptx-generator to build PPTX presentation decks from a topic or uploaded project documents and return the download link."

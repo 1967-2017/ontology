@@ -16,10 +16,10 @@ export function CopilotShell({ children }: Props) {
       <ActionFeedProvider>
         <CopilotSidebar
           defaultOpen
-          instructions="你是 ontology 项目的智能助手。严格围绕 Project、Team、Developer、Task 四类对象工作。"
+          instructions="你是 ontology 项目的智能助手。除 ontology 对象外，也支持已上传图片/PDF 的 OCR、本地知识库问答，以及基于资料生成 PPTX 格式汇报。"
           labels={{
             title: "Ontology Copilot",
-            initial: "可以直接输入：创建项目、查看test项目有哪些团队、给张三创建一个任务，归属test项目。",
+            initial: "可以直接输入：创建项目、识别这份文件、把这份资料加入知识库、根据上传资料生成 6 页 PPTX 汇报。",
             placeholder: "输入你的业务问题或创建请求",
           }}
           clickOutsideToClose={false}

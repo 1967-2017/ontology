@@ -28,6 +28,24 @@ class TaskPriority(str, Enum):
     high = "high"
 
 
+class DocumentOCRStatus(str, Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
+
+
+class DocumentKnowledgeStatus(str, Enum):
+    pending = "pending"
+    indexed = "indexed"
+
+
+class PresentationStatus(str, Enum):
+    pending = "pending"
+    completed = "completed"
+    failed = "failed"
+
+
 class ProjectModel(Base):
     __tablename__ = "project"
 
@@ -95,6 +113,65 @@ class TaskModel(Base):
         default=TaskPriority.medium,
     )
     estimated_hours: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class DocumentModel(Base):
+    __tablename__ = "document"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    file_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    ocr_status: Mapped[DocumentOCRStatus] = mapped_column(
+        SqlEnum(DocumentOCRStatus, values_callable=lambda obj: [item.value for item in obj]),
+        nullable=False,
+        default=DocumentOCRStatus.pending,
+    )
+    knowledge_status: Mapped[DocumentKnowledgeStatus] = mapped_column(
+        SqlEnum(DocumentKnowledgeStatus, values_callable=lambda obj: [item.value for item in obj]),
+        nullable=False,
+        default=DocumentKnowledgeStatus.pending,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class DocumentOCRResultModel(Base):
+    __tablename__ = "document_ocr_result"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("document.id"), nullable=False, unique=True)
+    full_text: Mapped[str] = mapped_column(Text(), nullable=False)
+    pages: Mapped[list[dict]] = mapped_column(JSON(), nullable=False, default=list)
+    blocks: Mapped[list[dict]] = mapped_column(JSON(), nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class PresentationModel(Base):
+    __tablename__ = "presentation"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    topic: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[PresentationStatus] = mapped_column(
+        SqlEnum(PresentationStatus, values_callable=lambda obj: [item.value for item in obj]),
+        nullable=False,
+        default=PresentationStatus.pending,
+    )
+    file_path: Mapped[str | None] = mapped_column(String(512))
+    slide_count: Mapped[int] = mapped_column(nullable=False, default=0)
+    source_document_ids: Mapped[list[int] | None] = mapped_column(JSON())
+    outline: Mapped[list[dict] | None] = mapped_column(JSON())
     created_at: Mapped[datetime] = mapped_column(DateTime(), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(), nullable=False, server_default=func.now(), onupdate=func.now()

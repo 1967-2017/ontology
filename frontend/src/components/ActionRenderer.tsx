@@ -3,6 +3,9 @@
 import { AgentAction } from "@/types/ontology";
 import { CreateOntologyObjectCard } from "./CreateOntologyObjectCard";
 import { ObjectTableCard } from "./ObjectTableCard";
+import { OcrResultCard } from "./OcrResultCard";
+import { PptResultCard } from "./PptResultCard";
+import { RagAnswerCard } from "./RagAnswerCard";
 import { ResultNoticeCard } from "./ResultNoticeCard";
 
 type Props = {
@@ -28,6 +31,35 @@ export function ActionRenderer({ action, onNotice }: Props) {
           title={action.payload.title}
           message={action.payload.message}
           status={action.payload.status}
+        />
+      );
+    case "show_ocr_result":
+      return (
+        <OcrResultCard
+          documentId={action.payload.document_id}
+          filename={action.payload.filename}
+          fullText={action.payload.full_text}
+          pages={action.payload.pages}
+        />
+      );
+    case "show_rag_answer":
+      return (
+        <RagAnswerCard
+          answer={action.payload.answer}
+          citations={action.payload.citations}
+          matchedDocuments={action.payload.matched_documents}
+        />
+      );
+    case "show_ppt_result":
+      return (
+        <PptResultCard
+          presentationId={action.payload.presentation_id}
+          title={action.payload.title}
+          topic={action.payload.topic}
+          status={action.payload.status}
+          slideCount={action.payload.slide_count}
+          downloadUrl={action.payload.download_url}
+          sourceDocumentIds={action.payload.source_document_ids}
         />
       );
     default:

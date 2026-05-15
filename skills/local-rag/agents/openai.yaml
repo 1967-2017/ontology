@@ -1,0 +1,4 @@
+interface:
+  display_name: "Local RAG"
+  short_description: "Query the project's persistent Chroma knowledge base."
+  default_prompt: "Use $local-rag to index OCR-completed project documents into the local Chroma knowledge base and answer questions with citations."

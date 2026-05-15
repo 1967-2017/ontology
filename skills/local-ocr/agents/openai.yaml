@@ -1,0 +1,4 @@
+interface:
+  display_name: "Local OCR"
+  short_description: "Run and inspect OCR for uploaded project files."
+  default_prompt: "Use $local-ocr to inspect uploaded project documents, wait on in-progress OCR jobs, and show cached OCR results without rerunning finished or failed work."
